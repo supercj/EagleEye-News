@@ -36,7 +36,7 @@ async function fetchHackerNews(source) {
       summary: `${item.score || 0} points · ${item.descendants || 0} comments`,
       sourceId: source.id,
       sourceName: source.name,
-      category: source.category,
+      tag: source.tag || source.category || "general",
       publishedAt: item.time ? item.time * 1000 : Date.now(),
       fetchedAt: Date.now()
     };
@@ -102,11 +102,11 @@ async function configureAlarm() {
   const { settings } = await getStoredState();
   await chrome.alarms.clear("refreshFeeds");
   chrome.alarms.create("refreshFeeds", {
-    periodInMinutes: Math.max(15, Number(settings.refreshMinutes) || 60)
+    periodInMinutes: Math.max(1, Number(settings.refreshMinutes) || 60)
   });
 }
 
-async function importCustomSources(importItems, defaultCategory) {
+async function importCustomSources(importItems, defaultTag) {
   const state = await getStoredState();
   const existingByUrl = new Map((state.customSources || []).map((item) => [item.url, item]));
   const imported = [];
@@ -122,7 +122,7 @@ async function importCustomSources(importItems, defaultCategory) {
       name: item.name || metadata.title || url,
       homepage: item.homepage || metadata.homepage || url,
       type,
-      category: item.category || defaultCategory || "general"
+      tag: item.tag || item.category || defaultTag || "general"
     });
     existingByUrl.set(url, source);
     imported.push(source);
@@ -204,7 +204,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }
 
     if (message.type === "importCustomSources") {
-      const state = await importCustomSources(message.items || [], message.defaultCategory || "general");
+      const state = await importCustomSources(message.items || [], message.defaultTag || message.defaultCategory || "general");
       sendResponse({ ok: true, state, sources: getAllSources(state.customSources) });
       return;
     }

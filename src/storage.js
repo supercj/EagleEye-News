@@ -22,9 +22,19 @@ export async function getStoredState() {
   };
 
   const state = await chrome.storage.local.get(defaults);
+  const settings = { ...getDefaultSettings(), ...state[STORAGE_KEYS.settings] };
+  settings.enabledSourceIds = (settings.enabledSourceIds || []).map((sourceId) => (
+    sourceId === "kr36-flash" ? "cnbc-finance" : sourceId
+  ));
+  if (!settings.activeSourceId) {
+    settings.activeSourceId = "all";
+  }
+  if (settings.activeSourceId === "kr36-flash") {
+    settings.activeSourceId = "cnbc-finance";
+  }
   return {
     articles: state[STORAGE_KEYS.articles],
-    settings: { ...getDefaultSettings(), ...state[STORAGE_KEYS.settings] },
+    settings,
     bookmarks: state[STORAGE_KEYS.bookmarks],
     readIds: state[STORAGE_KEYS.readIds],
     lastRefreshAt: state[STORAGE_KEYS.lastRefreshAt],

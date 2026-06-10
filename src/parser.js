@@ -51,7 +51,7 @@ export function parseRss(xmlText, source) {
       /<description[^>]*>([\s\S]*?)<\/description>/i,
       /<summary[^>]*>([\s\S]*?)<\/summary>/i,
       /<content[^>]*>([\s\S]*?)<\/content>/i
-    ])).slice(0, 140);
+    ])).slice(0, 260);
 
     return {
       id: makeArticleId(source.id, link, title),
@@ -60,7 +60,7 @@ export function parseRss(xmlText, source) {
       summary,
       sourceId: source.id,
       sourceName: source.name,
-      category: source.category,
+      tag: source.tag || source.category || "general",
       publishedAt: normalizeDate(published),
       fetchedAt: Date.now()
     };
@@ -72,7 +72,7 @@ export function parseGithubTrending(htmlText, source) {
   return repoBlocks.slice(0, source.limit || 20).map((block) => {
     const repoPath = firstMatch(block, [/<h2[\s\S]*?<a[^>]*href="([^"]+)"[\s\S]*?<\/a>/i]);
     const title = stripTags(firstMatch(block, [/<h2[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/i])).replace(/\s*\/\s*/g, " / ");
-    const summary = stripTags(firstMatch(block, [/<p[^>]*>([\s\S]*?)<\/p>/i])).slice(0, 140);
+    const summary = stripTags(firstMatch(block, [/<p[^>]*>([\s\S]*?)<\/p>/i])).slice(0, 260);
     const link = repoPath ? `https://github.com${repoPath}` : "";
     return {
       id: makeArticleId(source.id, link, title),
@@ -81,7 +81,7 @@ export function parseGithubTrending(htmlText, source) {
       summary,
       sourceId: source.id,
       sourceName: source.name,
-      category: source.category,
+      tag: source.tag || source.category || "general",
       publishedAt: Date.now(),
       fetchedAt: Date.now()
     };
@@ -96,7 +96,7 @@ export function parseJsonFeed(jsonText, source) {
   return items.slice(0, source.limit || 20).map((item) => {
     const link = item.url || item.external_url || homepage;
     const title = item.title || link;
-    const summary = stripTags(item.summary || item.content_text || item.content || "").slice(0, 140);
+    const summary = stripTags(item.summary || item.content_text || item.content || "").slice(0, 260);
     return {
       id: makeArticleId(source.id, link, title),
       title,
@@ -104,7 +104,7 @@ export function parseJsonFeed(jsonText, source) {
       summary,
       sourceId: source.id,
       sourceName: source.name,
-      category: source.category,
+      tag: source.tag || source.category || "general",
       publishedAt: normalizeDate(item.date_published || item.date_modified || item.published_at),
       fetchedAt: Date.now()
     };

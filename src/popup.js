@@ -1,10 +1,12 @@
-import { CATEGORIES } from "./sources.js";
+import { SOURCE_TAGS } from "./sources.js";
 
 let appState = null;
 let sources = [];
+let searchOpen = false;
 
 const elements = {
   refreshMeta: document.querySelector("#refreshMeta"),
+  searchButton: document.querySelector("#searchButton"),
   refreshButton: document.querySelector("#refreshButton"),
   optionsButton: document.querySelector("#optionsButton"),
   openOptionsButton: document.querySelector("#openOptionsButton"),
@@ -12,9 +14,9 @@ const elements = {
   onboardingPanel: document.querySelector("#onboardingPanel"),
   latestViewButton: document.querySelector("#latestViewButton"),
   bookmarksViewButton: document.querySelector("#bookmarksViewButton"),
-  categoryTabs: document.querySelector("#categoryTabs"),
+  sourceTabs: document.querySelector("#sourceTabs"),
+  searchOverlay: document.querySelector("#searchOverlay"),
   keywordInput: document.querySelector("#keywordInput"),
-  hideReadInput: document.querySelector("#hideReadInput"),
   statusPanel: document.querySelector("#statusPanel"),
   articleList: document.querySelector("#articleList"),
   emptyState: document.querySelector("#emptyState")
@@ -40,19 +42,63 @@ function formatRelativeTime(timestamp) {
   return new Date(timestamp).toLocaleDateString("zh-CN");
 }
 
-function categoryLabel(categoryId) {
-  return CATEGORIES.find((category) => category.id === categoryId)?.label || categoryId;
+function formatDateTime(timestamp) {
+  if (!timestamp) {
+    return "";
+  }
+  return new Date(timestamp).toLocaleString("zh-CN", {
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function tagLabel(tagId) {
+  return SOURCE_TAGS.find((tag) => tag.id === tagId)?.label || tagId || "综合";
+}
+
+function getSource(sourceId) {
+  return sources.find((source) => source.id === sourceId);
+}
+
+function getArticleTag(article) {
+  const source = getSource(article.sourceId);
+  return article.tag || article.category || source?.tag || source?.category || "general";
+}
+
+function getDomain(link) {
+  try {
+    return new URL(link).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+function getSourceFilters() {
+  const enabled = new Set(appState.settings.enabledSourceIds || []);
+  const sourceIdsWithArticles = new Set((appState.articles || []).map((article) => article.sourceId));
+  return sources
+    .filter((source) => enabled.has(source.id) || sourceIdsWithArticles.has(source.id))
+    .sort((a, b) => {
+      const tagA = SOURCE_TAGS.findIndex((tag) => tag.id === (a.tag || a.category));
+      const tagB = SOURCE_TAGS.findIndex((tag) => tag.id === (b.tag || b.category));
+      const rankA = Number(a.rank) || 999;
+      const rankB = Number(b.rank) || 999;
+      return tagA - tagB || rankA - rankB || a.name.localeCompare(b.name);
+    });
 }
 
 function getVisibleArticles() {
   const { articles, settings, readIds } = appState;
   const keyword = (settings.keyword || "").trim().toLowerCase();
+  const activeSourceId = settings.activeSourceId || "all";
 
   return articles.filter((article) => {
     if (settings.viewMode === "bookmarks" && !appState.bookmarks[article.id]) {
       return false;
     }
-    if (settings.activeCategory !== "all" && article.category !== settings.activeCategory) {
+    if (activeSourceId !== "all" && article.sourceId !== activeSourceId) {
       return false;
     }
     if (settings.hideRead && readIds[article.id]) {
@@ -61,7 +107,7 @@ function getVisibleArticles() {
     if (!keyword) {
       return true;
     }
-    return [article.title, article.summary, article.sourceName]
+    return [article.title, article.summary, article.sourceName, tagLabel(getArticleTag(article)), getDomain(article.link)]
       .filter(Boolean)
       .some((value) => value.toLowerCase().includes(keyword));
   });
@@ -78,14 +124,25 @@ async function saveSettingsPatch(patch) {
   render();
 }
 
-function renderTabs() {
-  elements.categoryTabs.innerHTML = "";
-  CATEGORIES.forEach((category) => {
+function renderSourceTabs() {
+  const activeSourceId = appState.settings.activeSourceId || "all";
+  elements.sourceTabs.innerHTML = "";
+
+  const allButton = document.createElement("button");
+  allButton.className = `source-tab ${activeSourceId === "all" ? "active" : ""}`;
+  allButton.type = "button";
+  allButton.textContent = "全部";
+  allButton.addEventListener("click", () => saveSettingsPatch({ activeSourceId: "all" }));
+  elements.sourceTabs.append(allButton);
+
+  getSourceFilters().forEach((source) => {
     const button = document.createElement("button");
-    button.className = `tab ${appState.settings.activeCategory === category.id ? "active" : ""}`;
-    button.textContent = category.label;
-    button.addEventListener("click", () => saveSettingsPatch({ activeCategory: category.id }));
-    elements.categoryTabs.append(button);
+    button.className = `source-tab ${activeSourceId === source.id ? "active" : ""}`;
+    button.type = "button";
+    button.textContent = source.name;
+    button.title = `${source.name} · ${tagLabel(source.tag || source.category)}`;
+    button.addEventListener("click", () => saveSettingsPatch({ activeSourceId: source.id }));
+    elements.sourceTabs.append(button);
   });
 }
 
@@ -108,8 +165,28 @@ function renderArticles() {
   visibleArticles.forEach((article) => {
     const isBookmarked = Boolean(appState.bookmarks[article.id]);
     const isRead = Boolean(appState.readIds[article.id]);
+    const articleTag = getArticleTag(article);
+    const domain = getDomain(article.link);
     const card = document.createElement("article");
     card.className = `article-card ${isRead ? "read" : ""}`;
+
+    const sourceRow = document.createElement("div");
+    sourceRow.className = "article-source-row";
+
+    const sourceName = document.createElement("span");
+    sourceName.className = "source-badge";
+    sourceName.textContent = article.sourceName || getSource(article.sourceId)?.name || "未知来源";
+
+    const tag = document.createElement("span");
+    tag.className = "tag-badge";
+    tag.textContent = tagLabel(articleTag);
+
+    const time = document.createElement("span");
+    time.className = "article-time";
+    time.textContent = formatRelativeTime(article.publishedAt);
+    time.title = formatDateTime(article.publishedAt);
+
+    sourceRow.append(sourceName, tag, time);
 
     const title = document.createElement("a");
     title.className = "article-title";
@@ -129,19 +206,28 @@ function renderArticles() {
 
     const summary = document.createElement("p");
     summary.className = "article-summary";
-    summary.textContent = article.summary || "无摘要";
+    summary.textContent = article.summary || "暂无摘要";
 
     const meta = document.createElement("div");
     meta.className = "article-meta";
-    const info = document.createElement("span");
-    info.textContent = `${article.sourceName} · ${categoryLabel(article.category)} · ${formatRelativeTime(article.publishedAt)}`;
+
+    const detail = document.createElement("span");
+    detail.className = "article-detail";
+    detail.textContent = [
+      domain,
+      article.fetchedAt ? `抓取 ${formatRelativeTime(article.fetchedAt)}` : ""
+    ].filter(Boolean).join(" · ");
 
     const actions = document.createElement("div");
     actions.className = "article-actions";
 
+    const readState = document.createElement("span");
+    readState.className = `read-state ${isRead ? "read" : ""}`;
+    readState.textContent = isRead ? "已读" : "未读";
+
     const bookmarkButton = document.createElement("button");
     bookmarkButton.className = `text-button ${isBookmarked ? "active" : ""}`;
-    bookmarkButton.textContent = isBookmarked ? "已藏" : "收藏";
+    bookmarkButton.textContent = isBookmarked ? "已收藏" : "收藏";
     bookmarkButton.addEventListener("click", async () => {
       const response = await sendMessage({ type: "toggleBookmark", id: article.id });
       if (!response.ok) {
@@ -151,9 +237,9 @@ function renderArticles() {
       renderArticles();
     });
 
-    actions.append(bookmarkButton);
-    meta.append(info, actions);
-    card.append(title, summary, meta);
+    actions.append(readState, bookmarkButton);
+    meta.append(detail, actions);
+    card.append(sourceRow, title, summary, meta);
     elements.articleList.append(card);
   });
 }
@@ -163,9 +249,10 @@ function render() {
   elements.latestViewButton.classList.toggle("active", appState.settings.viewMode !== "bookmarks");
   elements.bookmarksViewButton.classList.toggle("active", appState.settings.viewMode === "bookmarks");
   elements.keywordInput.value = appState.settings.keyword || "";
-  elements.hideReadInput.checked = Boolean(appState.settings.hideRead);
+  elements.searchOverlay.hidden = !searchOpen;
+  elements.searchButton.classList.toggle("active", searchOpen || Boolean((appState.settings.keyword || "").trim()));
   elements.onboardingPanel.hidden = Boolean(appState.settings.onboardingComplete);
-  renderTabs();
+  renderSourceTabs();
   renderStatus();
   renderArticles();
 }
@@ -197,6 +284,13 @@ async function init() {
 }
 
 elements.refreshButton.addEventListener("click", refresh);
+elements.searchButton.addEventListener("click", () => {
+  searchOpen = elements.searchOverlay.hidden;
+  render();
+  if (searchOpen) {
+    elements.keywordInput.focus();
+  }
+});
 elements.optionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 elements.openOptionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 elements.openImportButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
@@ -204,9 +298,6 @@ elements.latestViewButton.addEventListener("click", () => saveSettingsPatch({ vi
 elements.bookmarksViewButton.addEventListener("click", () => saveSettingsPatch({ viewMode: "bookmarks" }));
 elements.keywordInput.addEventListener("input", (event) => {
   saveSettingsPatch({ keyword: event.target.value });
-});
-elements.hideReadInput.addEventListener("change", (event) => {
-  saveSettingsPatch({ hideRead: event.target.checked });
 });
 
 init();

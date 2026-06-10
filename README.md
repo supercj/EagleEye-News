@@ -5,7 +5,7 @@
 ## 功能
 
 - 聚合公开 RSS、API、榜单页面中的热门链接
-- 支持分类筛选、关键词搜索、来源开关
+- 支持按订阅来源筛选、关键词搜索、来源开关、来源标签和推荐源排名展示
 - 支持本地收藏、已读状态、刷新时间记录
 - 所有数据保存在 `chrome.storage.local`
 - 后台每 60 分钟自动刷新，也支持手动刷新
@@ -25,12 +25,13 @@ Edge 地址：`edge://extensions/`
 
 本扩展只聚合公开来源中的标题、链接、来源、时间和短摘要，不复制全文，不绕过登录、反爬、付费墙或访问限制。后续新增来源时优先选择官方 RSS/API。
 
-## 上架前还需要
+## 上架准备
 
-- 准备 128x128、48x48、16x16 图标
-- 准备 Chrome Web Store / Edge Add-ons 截图
-- 写一份隐私说明，说明不采集个人信息，数据仅保存在本地
-- 检查每个资讯来源的使用条款，保留来源名称和原文链接
+- 已准备 128x128、48x48、16x16 图标
+- 已补充隐私说明：`PRIVACY.md`
+- 已整理上架素材清单：`docs/STORE_LISTING.md`
+- 已整理内置来源合规记录：`docs/SOURCE_REVIEW.md`
+- 仍需准备 Chrome Web Store / Edge Add-ons 截图
 - 如新增 AI 摘要，优先使用用户自己的 API Key 或再增加服务端方案
 
 ## 目录
@@ -38,6 +39,10 @@ Edge 地址：`edge://extensions/`
 ```text
 EagleEye-News/
   manifest.json
+  PRIVACY.md
+  docs/
+    STORE_LISTING.md
+    SOURCE_REVIEW.md
   src/
     background.js
     sources.js
