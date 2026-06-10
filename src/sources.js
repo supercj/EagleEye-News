@@ -83,6 +83,15 @@ export const SOURCES = [
     limit: 20
   },
   {
+    id: "linux-do-latest",
+    name: "Linux.do 最新",
+    category: "dev",
+    type: "rss",
+    url: "https://linux.do/latest.rss",
+    homepage: "https://linux.do/latest",
+    limit: 20
+  },
+  {
     id: "github-trending",
     name: "GitHub Trending",
     category: "dev",
@@ -110,6 +119,7 @@ export const DEFAULT_ENABLED_SOURCE_IDS = [
   "ifanr",
   "kr36-flash",
   "v2ex-hot",
+  "linux-do-latest",
   "github-trending"
 ];
 

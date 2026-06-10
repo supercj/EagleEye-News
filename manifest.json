@@ -29,6 +29,7 @@
   "host_permissions": [
     "https://hacker-news.firebaseio.com/*",
     "https://github.com/trending*",
+    "https://linux.do/*",
     "https://www.solidot.org/*",
     "https://www.infoq.cn/*",
     "https://www.ifanr.com/*",
