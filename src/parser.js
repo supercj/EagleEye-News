@@ -71,8 +71,7 @@ export function parseGithubTrending(htmlText, source) {
   const repoBlocks = htmlText.match(/<article[\s\S]*?<\/article>/g) || [];
   return repoBlocks.slice(0, source.limit || 20).map((block) => {
     const repoPath = firstMatch(block, [/<h2[\s\S]*?<a[^>]*href="([^"]+)"[\s\S]*?<\/a>/i]);
-    const title = stripTags(firstMatch(block, [/<h2[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/i]))
-      .replace(/\s*\/\s*/g, " / ");
+    const title = stripTags(firstMatch(block, [/<h2[\s\S]*?<a[^>]*>([\s\S]*?)<\/a>/i])).replace(/\s*\/\s*/g, " / ");
     const summary = stripTags(firstMatch(block, [/<p[^>]*>([\s\S]*?)<\/p>/i])).slice(0, 140);
     const link = repoPath ? `https://github.com${repoPath}` : "";
     return {
@@ -87,6 +86,63 @@ export function parseGithubTrending(htmlText, source) {
       fetchedAt: Date.now()
     };
   }).filter((item) => item.title && item.link);
+}
+
+export function parseJsonFeed(jsonText, source) {
+  const data = JSON.parse(jsonText);
+  const items = Array.isArray(data.items) ? data.items : [];
+  const homepage = data.home_page_url || data.homePageUrl || data.url || "";
+
+  return items.slice(0, source.limit || 20).map((item) => {
+    const link = item.url || item.external_url || homepage;
+    const title = item.title || link;
+    const summary = stripTags(item.summary || item.content_text || item.content || "").slice(0, 140);
+    return {
+      id: makeArticleId(source.id, link, title),
+      title,
+      link,
+      summary,
+      sourceId: source.id,
+      sourceName: source.name,
+      category: source.category,
+      publishedAt: normalizeDate(item.date_published || item.date_modified || item.published_at),
+      fetchedAt: Date.now()
+    };
+  }).filter((item) => item.title && item.link);
+}
+
+export function parseFeedMetadata(text) {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return { type: "rss", title: "", homepage: "" };
+  }
+
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    try {
+      const data = JSON.parse(trimmed);
+      if (data && typeof data === "object" && data.version && Array.isArray(data.items)) {
+        return {
+          type: "jsonfeed",
+          title: data.title || "",
+          homepage: data.home_page_url || data.homePageUrl || data.feed_url || ""
+        };
+      }
+    } catch {
+      return { type: "rss", title: "", homepage: "" };
+    }
+  }
+
+  const title = firstMatch(trimmed, [
+    /<channel[\s\S]*?<title[^>]*>([\s\S]*?)<\/title>/i,
+    /<feed[\s\S]*?<title[^>]*>([\s\S]*?)<\/title>/i,
+    /<title[^>]*>([\s\S]*?)<\/title>/i
+  ]);
+  const homepage = firstMatch(trimmed, [
+    /<channel[\s\S]*?<link[^>]*>([\s\S]*?)<\/link>/i,
+    /<feed[\s\S]*?<link[^>]*href=["']([^"']+)["'][^>]*>/i,
+    /<link[^>]*href=["']([^"']+)["'][^>]*>/i
+  ]);
+  return { type: "rss", title, homepage };
 }
 
 export function dedupeArticles(articles) {

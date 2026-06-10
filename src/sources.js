@@ -1,6 +1,6 @@
 export const DEFAULT_REFRESH_MINUTES = 60;
 
-export const SOURCES = [
+export const BUILTIN_SOURCES = [
   {
     id: "zhihu-hot",
     name: "知乎热榜",
@@ -110,18 +110,7 @@ export const SOURCES = [
   }
 ];
 
-export const DEFAULT_ENABLED_SOURCE_IDS = [
-  "zhihu-hot",
-  "weibo-hot",
-  "ithome",
-  "sspai",
-  "infoq-cn",
-  "ifanr",
-  "kr36-flash",
-  "v2ex-hot",
-  "linux-do-latest",
-  "github-trending"
-];
+export const DEFAULT_ENABLED_SOURCE_IDS = [];
 
 export const CATEGORIES = [
   { id: "all", label: "全部" },
@@ -131,6 +120,35 @@ export const CATEGORIES = [
   { id: "finance", label: "财经" }
 ];
 
+export function getBuiltinSources() {
+  return [...BUILTIN_SOURCES];
+}
+
+export function getAllSources(customSources = []) {
+  return [...BUILTIN_SOURCES, ...customSources];
+}
+
+export function stableSourceId(url) {
+  let hash = 0;
+  for (let i = 0; i < url.length; i += 1) {
+    hash = (hash * 31 + url.charCodeAt(i)) >>> 0;
+  }
+  return `custom-${hash.toString(36)}`;
+}
+
+export function normalizeCustomSource(source) {
+  return {
+    id: source.id || stableSourceId(source.url),
+    name: source.name || source.url,
+    category: source.category || "general",
+    type: source.type || "rss",
+    url: source.url,
+    homepage: source.homepage || source.url,
+    limit: source.limit || 20,
+    isCustom: true
+  };
+}
+
 export function getDefaultSettings() {
   return {
     enabledSourceIds: DEFAULT_ENABLED_SOURCE_IDS,
@@ -138,6 +156,7 @@ export function getDefaultSettings() {
     viewMode: "latest",
     activeCategory: "all",
     keyword: "",
-    hideRead: false
+    hideRead: false,
+    onboardingComplete: false
   };
 }

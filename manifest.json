@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "EagleEye News",
-  "description": "鹰眼资讯：无服务器的 Chrome/Edge 热点资讯聚合扩展，聚合公开来源并在本地保存收藏与已读状态。",
+  "description": "鹰眼资讯：无服务器的 Chrome/Edge 热点资讯聚合扩展，支持导入订阅源并在本地保存收藏与已读状态。",
   "version": "0.1.0",
   "icons": {
     "16": "assets/icons/icon-16.png",
@@ -24,7 +24,8 @@
   "options_page": "src/options.html",
   "permissions": [
     "alarms",
-    "storage"
+    "storage",
+    "permissions"
   ],
   "host_permissions": [
     "https://hacker-news.firebaseio.com/*",
@@ -36,5 +37,9 @@
     "https://www.ithome.com/*",
     "https://sspai.com/*",
     "https://rsshub.app/*"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
   ]
 }

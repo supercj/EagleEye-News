@@ -7,6 +7,9 @@ const elements = {
   refreshMeta: document.querySelector("#refreshMeta"),
   refreshButton: document.querySelector("#refreshButton"),
   optionsButton: document.querySelector("#optionsButton"),
+  openOptionsButton: document.querySelector("#openOptionsButton"),
+  openImportButton: document.querySelector("#openImportButton"),
+  onboardingPanel: document.querySelector("#onboardingPanel"),
   latestViewButton: document.querySelector("#latestViewButton"),
   bookmarksViewButton: document.querySelector("#bookmarksViewButton"),
   categoryTabs: document.querySelector("#categoryTabs"),
@@ -25,18 +28,15 @@ function formatRelativeTime(timestamp) {
   if (!timestamp) {
     return "尚未刷新";
   }
-
   const diff = Date.now() - timestamp;
   const minutes = Math.max(1, Math.floor(diff / 60000));
   if (minutes < 60) {
     return `${minutes} 分钟前`;
   }
-
   const hours = Math.floor(minutes / 60);
   if (hours < 24) {
     return `${hours} 小时前`;
   }
-
   return new Date(timestamp).toLocaleDateString("zh-CN");
 }
 
@@ -52,19 +52,15 @@ function getVisibleArticles() {
     if (settings.viewMode === "bookmarks" && !appState.bookmarks[article.id]) {
       return false;
     }
-
     if (settings.activeCategory !== "all" && article.category !== settings.activeCategory) {
       return false;
     }
-
     if (settings.hideRead && readIds[article.id]) {
       return false;
     }
-
     if (!keyword) {
       return true;
     }
-
     return [article.title, article.summary, article.sourceName]
       .filter(Boolean)
       .some((value) => value.toLowerCase().includes(keyword));
@@ -72,12 +68,11 @@ function getVisibleArticles() {
 }
 
 async function saveSettingsPatch(patch) {
-  const settings = { ...appState.settings, ...patch };
+  const settings = { ...appState.settings, ...patch, onboardingComplete: true };
   const response = await sendMessage({ type: "saveSettings", settings });
   if (!response.ok) {
     return;
   }
-
   appState = response.state;
   sources = response.sources;
   render();
@@ -101,7 +96,6 @@ function renderStatus() {
       const source = sources.find((item) => item.id === sourceId);
       return `${source?.name || sourceId}: ${status.error}`;
     });
-
   elements.statusPanel.hidden = failures.length === 0;
   elements.statusPanel.textContent = failures.length ? failures.join("；") : "";
 }
@@ -114,7 +108,6 @@ function renderArticles() {
   visibleArticles.forEach((article) => {
     const isBookmarked = Boolean(appState.bookmarks[article.id]);
     const isRead = Boolean(appState.readIds[article.id]);
-
     const card = document.createElement("article");
     card.className = `article-card ${isRead ? "read" : ""}`;
 
@@ -124,12 +117,12 @@ function renderArticles() {
     title.target = "_blank";
     title.rel = "noreferrer";
     title.textContent = article.title;
-    title.addEventListener("click", async () => {
-      const response = await sendMessage({ type: "markRead", id: article.id });
+    title.addEventListener("click", async (event) => {
+      event.preventDefault();
+      const response = await sendMessage({ type: "openArticle", article: { id: article.id, link: article.link } });
       if (!response.ok) {
         return;
       }
-
       appState.readIds = response.readIds;
       renderArticles();
     });
@@ -140,25 +133,11 @@ function renderArticles() {
 
     const meta = document.createElement("div");
     meta.className = "article-meta";
-
     const info = document.createElement("span");
     info.textContent = `${article.sourceName} · ${categoryLabel(article.category)} · ${formatRelativeTime(article.publishedAt)}`;
 
     const actions = document.createElement("div");
     actions.className = "article-actions";
-
-    const readButton = document.createElement("button");
-    readButton.className = "text-button";
-    readButton.textContent = isRead ? "已读" : "标记";
-    readButton.addEventListener("click", async () => {
-      const response = await sendMessage({ type: "markRead", id: article.id });
-      if (!response.ok) {
-        return;
-      }
-
-      appState.readIds = response.readIds;
-      renderArticles();
-    });
 
     const bookmarkButton = document.createElement("button");
     bookmarkButton.className = `text-button ${isBookmarked ? "active" : ""}`;
@@ -168,12 +147,11 @@ function renderArticles() {
       if (!response.ok) {
         return;
       }
-
       appState.bookmarks = response.bookmarks;
       renderArticles();
     });
 
-    actions.append(readButton, bookmarkButton);
+    actions.append(bookmarkButton);
     meta.append(info, actions);
     card.append(title, summary, meta);
     elements.articleList.append(card);
@@ -186,6 +164,7 @@ function render() {
   elements.bookmarksViewButton.classList.toggle("active", appState.settings.viewMode === "bookmarks");
   elements.keywordInput.value = appState.settings.keyword || "";
   elements.hideReadInput.checked = Boolean(appState.settings.hideRead);
+  elements.onboardingPanel.hidden = Boolean(appState.settings.onboardingComplete);
   renderTabs();
   renderStatus();
   renderArticles();
@@ -194,19 +173,15 @@ function render() {
 async function refresh() {
   elements.refreshButton.disabled = true;
   elements.refreshButton.textContent = "刷新中";
-
   const response = await sendMessage({ type: "refresh" });
-
   elements.refreshButton.disabled = false;
   elements.refreshButton.textContent = "刷新";
-
   if (response.ok) {
     appState = response.state;
     sources = response.sources;
     render();
     return;
   }
-
   elements.statusPanel.hidden = false;
   elements.statusPanel.textContent = response.error || "刷新失败";
 }
@@ -216,18 +191,15 @@ async function init() {
   if (!response.ok) {
     return;
   }
-
   appState = response.state;
   sources = response.sources;
   render();
-
-  if (!appState.lastRefreshAt) {
-    refresh();
-  }
 }
 
 elements.refreshButton.addEventListener("click", refresh);
 elements.optionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
+elements.openOptionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
+elements.openImportButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 elements.latestViewButton.addEventListener("click", () => saveSettingsPatch({ viewMode: "latest" }));
 elements.bookmarksViewButton.addEventListener("click", () => saveSettingsPatch({ viewMode: "bookmarks" }));
 elements.keywordInput.addEventListener("input", (event) => {

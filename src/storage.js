@@ -6,7 +6,8 @@ export const STORAGE_KEYS = {
   bookmarks: "bookmarks",
   readIds: "readIds",
   lastRefreshAt: "lastRefreshAt",
-  sourceStatus: "sourceStatus"
+  sourceStatus: "sourceStatus",
+  customSources: "customSources"
 };
 
 export async function getStoredState() {
@@ -16,8 +17,10 @@ export async function getStoredState() {
     [STORAGE_KEYS.bookmarks]: {},
     [STORAGE_KEYS.readIds]: {},
     [STORAGE_KEYS.lastRefreshAt]: null,
-    [STORAGE_KEYS.sourceStatus]: {}
+    [STORAGE_KEYS.sourceStatus]: {},
+    [STORAGE_KEYS.customSources]: []
   };
+
   const state = await chrome.storage.local.get(defaults);
   return {
     articles: state[STORAGE_KEYS.articles],
@@ -25,7 +28,8 @@ export async function getStoredState() {
     bookmarks: state[STORAGE_KEYS.bookmarks],
     readIds: state[STORAGE_KEYS.readIds],
     lastRefreshAt: state[STORAGE_KEYS.lastRefreshAt],
-    sourceStatus: state[STORAGE_KEYS.sourceStatus]
+    sourceStatus: state[STORAGE_KEYS.sourceStatus],
+    customSources: state[STORAGE_KEYS.customSources]
   };
 }
 
@@ -39,6 +43,10 @@ export async function saveArticles(articles, sourceStatus) {
 
 export async function saveSettings(settings) {
   await chrome.storage.local.set({ [STORAGE_KEYS.settings]: settings });
+}
+
+export async function saveCustomSources(customSources) {
+  await chrome.storage.local.set({ [STORAGE_KEYS.customSources]: customSources });
 }
 
 export async function toggleMapItem(key, id) {

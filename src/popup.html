@@ -19,6 +19,15 @@
         </div>
       </header>
 
+      <section id="onboardingPanel" class="onboarding" hidden>
+        <h2>先选你关注的资源</h2>
+        <p>支持 RSS、Atom、JSON Feed、OPML 导入，点击后会自动记为已读。</p>
+        <div class="onboarding-actions">
+          <button id="openOptionsButton" class="primary-button">去选择资源</button>
+          <button id="openImportButton" class="secondary-button">导入订阅</button>
+        </div>
+      </section>
+
       <nav class="view-switch" aria-label="视图">
         <button id="latestViewButton" class="view-button active">热点</button>
         <button id="bookmarksViewButton" class="view-button">收藏</button>
@@ -39,8 +48,8 @@
       <section id="statusPanel" class="status-panel" hidden></section>
       <section id="articleList" class="article-list" aria-live="polite"></section>
       <section id="emptyState" class="empty-state" hidden>
-        <h2>暂无链接</h2>
-        <p>点击刷新，或在设置里开启更多来源。</p>
+        <h2>暂无内容</h2>
+        <p>先去选择资源，或者导入一份订阅。</p>
       </section>
     </main>
     <script type="module" src="./popup.js"></script>

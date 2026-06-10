@@ -10,11 +10,38 @@
     <main class="settings-page">
       <header class="page-header">
         <h1>设置</h1>
-        <p>选择公开来源和刷新频率，数据会保存在本机浏览器。</p>
+        <p>先选你关注的资源，再决定要不要导入更多订阅。</p>
       </header>
 
       <section class="section">
-        <h2>来源</h2>
+        <h2>导入订阅</h2>
+        <div class="import-panel">
+          <textarea id="importInput" placeholder="粘贴 OPML、RSS/Atom/JSON Feed 地址，或每行一个订阅链接"></textarea>
+          <div class="import-row">
+            <label class="field">
+              <span>导入分类</span>
+              <select id="importCategory">
+                <option value="general">综合</option>
+                <option value="tech">科技</option>
+                <option value="dev">开发者</option>
+                <option value="finance">财经</option>
+              </select>
+            </label>
+            <label class="file-button">
+              <input id="importFile" type="file" accept=".opml,.xml,.txt,.json,.rss,text/plain,text/xml,application/xml,application/json">
+              <span>选择文件</span>
+            </label>
+            <button id="importButton">导入</button>
+          </div>
+          <p id="importMeta" class="meta"></p>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>来源</h2>
+          <button id="selectRecommended" class="secondary-button">启用推荐源</button>
+        </div>
         <div id="sourceList" class="source-list"></div>
       </section>
 

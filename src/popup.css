@@ -16,8 +16,8 @@
 }
 
 body {
-  width: 420px;
-  min-height: 560px;
+  width: 440px;
+  min-height: 620px;
   margin: 0;
   background: var(--bg);
   color: var(--text);
@@ -31,7 +31,7 @@ input {
 }
 
 .app {
-  min-height: 560px;
+  min-height: 620px;
   padding: 16px;
 }
 
@@ -40,17 +40,22 @@ input {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
 }
 
 h1 {
-  margin: 0;
   font-size: 22px;
   line-height: 1.2;
 }
 
 .topbar p {
-  margin: 6px 0 0;
+  margin-top: 6px;
   color: var(--muted);
   font-size: 12px;
 }
@@ -58,6 +63,63 @@ h1 {
 .toolbar {
   display: flex;
   gap: 8px;
+}
+
+.icon-button,
+.primary-button,
+.secondary-button {
+  border-radius: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.icon-button {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+}
+
+.icon-button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.onboarding {
+  border: 1px solid #b9ece6;
+  border-radius: 8px;
+  background: #f1fffd;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.onboarding h2 {
+  font-size: 16px;
+  margin-bottom: 6px;
+}
+
+.onboarding p {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.onboarding-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.primary-button {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.secondary-button {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
 }
 
 .view-switch {
@@ -85,21 +147,6 @@ h1 {
   color: var(--text);
   font-weight: 700;
   box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
-}
-
-.icon-button {
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--panel);
-  color: var(--text);
-  cursor: pointer;
-}
-
-.icon-button:hover {
-  border-color: var(--accent);
-  color: var(--accent);
 }
 
 .filters {
