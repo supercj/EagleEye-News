@@ -3,9 +3,19 @@
   "name": "EagleEye News",
   "description": "鹰眼资讯：无服务器的 Chrome/Edge 热点资讯聚合扩展，聚合公开来源并在本地保存收藏与已读状态。",
   "version": "0.1.0",
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128.png"
+  },
   "action": {
     "default_title": "EagleEye News",
-    "default_popup": "src/popup.html"
+    "default_popup": "src/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png"
+    }
   },
   "background": {
     "service_worker": "src/background.js",
