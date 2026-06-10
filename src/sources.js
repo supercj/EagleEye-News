@@ -2,24 +2,6 @@ export const DEFAULT_REFRESH_MINUTES = 60;
 
 export const BUILTIN_SOURCES = [
   {
-    id: "zhihu-hot",
-    name: "知乎热榜",
-    category: "general",
-    type: "rss",
-    url: "https://rsshub.app/zhihu/hotlist",
-    homepage: "https://www.zhihu.com/hot",
-    limit: 20
-  },
-  {
-    id: "weibo-hot",
-    name: "微博热搜",
-    category: "general",
-    type: "rss",
-    url: "https://rsshub.app/weibo/search/hot",
-    homepage: "https://s.weibo.com/top/summary",
-    limit: 20
-  },
-  {
     id: "ifanr",
     name: "爱范儿",
     category: "tech",
@@ -66,11 +48,11 @@ export const BUILTIN_SOURCES = [
   },
   {
     id: "kr36-flash",
-    name: "36氪快讯",
+    name: "CNBC Finance",
     category: "finance",
     type: "rss",
-    url: "https://rsshub.app/36kr/newsflashes",
-    homepage: "https://www.36kr.com/newsflashes/catalog/2",
+    url: "https://www.cnbc.com/id/100003114/device/rss/rss.html",
+    homepage: "https://www.cnbc.com/finance/",
     limit: 20
   },
   {
@@ -78,7 +60,7 @@ export const BUILTIN_SOURCES = [
     name: "V2EX 热门",
     category: "dev",
     type: "rss",
-    url: "https://rsshub.app/v2ex/topics/hot",
+    url: "https://www.v2ex.com/feed/tab/hot.xml",
     homepage: "https://www.v2ex.com/?tab=hot",
     limit: 20
   },
@@ -106,6 +88,15 @@ export const BUILTIN_SOURCES = [
     category: "dev",
     type: "hackernews",
     homepage: "https://news.ycombinator.com/",
+    limit: 20
+  },
+  {
+    id: "producthunt",
+    name: "Product Hunt",
+    category: "tech",
+    type: "rss",
+    url: "https://www.producthunt.com/feed",
+    homepage: "https://www.producthunt.com/",
     limit: 20
   }
 ];

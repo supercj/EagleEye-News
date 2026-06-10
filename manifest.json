@@ -36,7 +36,9 @@
     "https://www.ifanr.com/*",
     "https://www.ithome.com/*",
     "https://sspai.com/*",
-    "https://rsshub.app/*"
+    "https://www.v2ex.com/*",
+    "https://www.producthunt.com/*",
+    "https://www.cnbc.com/*"
   ],
   "optional_host_permissions": [
     "http://*/*",
