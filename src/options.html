@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EagleEye News 设置</title>
+    <link rel="stylesheet" href="./options.css">
+  </head>
+  <body>
+    <main class="settings-page">
+      <header class="page-header">
+        <h1>设置</h1>
+        <p>选择公开来源和刷新频率，数据会保存在本机浏览器。</p>
+      </header>
+
+      <section class="section">
+        <h2>来源</h2>
+        <div id="sourceList" class="source-list"></div>
+      </section>
+
+      <section class="section">
+        <h2>刷新</h2>
+        <label class="field">
+          <span>自动刷新间隔</span>
+          <select id="refreshSelect">
+            <option value="30">30 分钟</option>
+            <option value="60">60 分钟</option>
+            <option value="120">2 小时</option>
+            <option value="240">4 小时</option>
+          </select>
+        </label>
+      </section>
+
+      <footer class="footer">
+        <button id="saveButton">保存设置</button>
+        <span id="saveMeta"></span>
+      </footer>
+    </main>
+    <script type="module" src="./options.js"></script>
+  </body>
+</html>

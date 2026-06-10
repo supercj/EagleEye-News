@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "EagleEye News",
+  "description": "鹰眼资讯：无服务器的 Chrome/Edge 热点资讯聚合扩展，聚合公开来源并在本地保存收藏与已读状态。",
+  "version": "0.1.0",
+  "action": {
+    "default_title": "EagleEye News",
+    "default_popup": "src/popup.html"
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "options_page": "src/options.html",
+  "permissions": [
+    "alarms",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://hacker-news.firebaseio.com/*",
+    "https://github.com/trending*",
+    "https://www.solidot.org/*",
+    "https://www.infoq.cn/*",
+    "https://www.ithome.com/*",
+    "https://sspai.com/*",
+    "https://www.producthunt.com/*",
+    "https://www.cnbc.com/*",
+    "https://rsshub.app/*"
+  ]
+}

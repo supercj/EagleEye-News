@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EagleEye News</title>
+    <link rel="stylesheet" href="./popup.css">
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div>
+          <h1>鹰眼资讯</h1>
+          <p id="refreshMeta">准备刷新</p>
+        </div>
+        <div class="toolbar">
+          <button id="refreshButton" class="icon-button" title="刷新">↻</button>
+          <button id="optionsButton" class="icon-button" title="设置">⚙</button>
+        </div>
+      </header>
+
+      <nav class="view-switch" aria-label="视图">
+        <button id="latestViewButton" class="view-button active">热点</button>
+        <button id="bookmarksViewButton" class="view-button">收藏</button>
+      </nav>
+
+      <section class="filters" aria-label="筛选">
+        <div id="categoryTabs" class="tabs"></div>
+        <label class="search">
+          <span>⌕</span>
+          <input id="keywordInput" type="search" placeholder="搜索标题、来源或摘要">
+        </label>
+        <label class="toggle">
+          <input id="hideReadInput" type="checkbox">
+          <span>隐藏已读</span>
+        </label>
+      </section>
+
+      <section id="statusPanel" class="status-panel" hidden></section>
+      <section id="articleList" class="article-list" aria-live="polite"></section>
+      <section id="emptyState" class="empty-state" hidden>
+        <h2>暂无链接</h2>
+        <p>点击刷新，或在设置里开启更多来源。</p>
+      </section>
+    </main>
+    <script type="module" src="./popup.js"></script>
+  </body>
+</html>
