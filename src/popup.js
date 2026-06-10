@@ -25,15 +25,18 @@ function formatRelativeTime(timestamp) {
   if (!timestamp) {
     return "尚未刷新";
   }
+
   const diff = Date.now() - timestamp;
   const minutes = Math.max(1, Math.floor(diff / 60000));
   if (minutes < 60) {
     return `${minutes} 分钟前`;
   }
+
   const hours = Math.floor(minutes / 60);
   if (hours < 24) {
     return `${hours} 小时前`;
   }
+
   return new Date(timestamp).toLocaleDateString("zh-CN");
 }
 
@@ -44,19 +47,24 @@ function categoryLabel(categoryId) {
 function getVisibleArticles() {
   const { articles, settings, readIds } = appState;
   const keyword = (settings.keyword || "").trim().toLowerCase();
+
   return articles.filter((article) => {
     if (settings.viewMode === "bookmarks" && !appState.bookmarks[article.id]) {
       return false;
     }
+
     if (settings.activeCategory !== "all" && article.category !== settings.activeCategory) {
       return false;
     }
+
     if (settings.hideRead && readIds[article.id]) {
       return false;
     }
+
     if (!keyword) {
       return true;
     }
+
     return [article.title, article.summary, article.sourceName]
       .filter(Boolean)
       .some((value) => value.toLowerCase().includes(keyword));
@@ -66,11 +74,13 @@ function getVisibleArticles() {
 async function saveSettingsPatch(patch) {
   const settings = { ...appState.settings, ...patch };
   const response = await sendMessage({ type: "saveSettings", settings });
-  if (response.ok) {
-    appState = response.state;
-    sources = response.sources;
-    render();
+  if (!response.ok) {
+    return;
   }
+
+  appState = response.state;
+  sources = response.sources;
+  render();
 }
 
 function renderTabs() {
@@ -104,6 +114,7 @@ function renderArticles() {
   visibleArticles.forEach((article) => {
     const isBookmarked = Boolean(appState.bookmarks[article.id]);
     const isRead = Boolean(appState.readIds[article.id]);
+
     const card = document.createElement("article");
     card.className = `article-card ${isRead ? "read" : ""}`;
 
@@ -115,10 +126,12 @@ function renderArticles() {
     title.textContent = article.title;
     title.addEventListener("click", async () => {
       const response = await sendMessage({ type: "markRead", id: article.id });
-      if (response.ok) {
-        appState.readIds = response.readIds;
-        renderArticles();
+      if (!response.ok) {
+        return;
       }
+
+      appState.readIds = response.readIds;
+      renderArticles();
     });
 
     const summary = document.createElement("p");
@@ -127,20 +140,24 @@ function renderArticles() {
 
     const meta = document.createElement("div");
     meta.className = "article-meta";
+
     const info = document.createElement("span");
     info.textContent = `${article.sourceName} · ${categoryLabel(article.category)} · ${formatRelativeTime(article.publishedAt)}`;
 
     const actions = document.createElement("div");
     actions.className = "article-actions";
+
     const readButton = document.createElement("button");
     readButton.className = "text-button";
     readButton.textContent = isRead ? "已读" : "标记";
     readButton.addEventListener("click", async () => {
       const response = await sendMessage({ type: "markRead", id: article.id });
-      if (response.ok) {
-        appState.readIds = response.readIds;
-        renderArticles();
+      if (!response.ok) {
+        return;
       }
+
+      appState.readIds = response.readIds;
+      renderArticles();
     });
 
     const bookmarkButton = document.createElement("button");
@@ -148,10 +165,12 @@ function renderArticles() {
     bookmarkButton.textContent = isBookmarked ? "已藏" : "收藏";
     bookmarkButton.addEventListener("click", async () => {
       const response = await sendMessage({ type: "toggleBookmark", id: article.id });
-      if (response.ok) {
-        appState.bookmarks = response.bookmarks;
-        renderArticles();
+      if (!response.ok) {
+        return;
       }
+
+      appState.bookmarks = response.bookmarks;
+      renderArticles();
     });
 
     actions.append(readButton, bookmarkButton);
@@ -174,29 +193,36 @@ function render() {
 
 async function refresh() {
   elements.refreshButton.disabled = true;
-  elements.refreshButton.textContent = "…";
+  elements.refreshButton.textContent = "刷新中";
+
   const response = await sendMessage({ type: "refresh" });
+
   elements.refreshButton.disabled = false;
-  elements.refreshButton.textContent = "↻";
+  elements.refreshButton.textContent = "刷新";
+
   if (response.ok) {
     appState = response.state;
     sources = response.sources;
     render();
-  } else {
-    elements.statusPanel.hidden = false;
-    elements.statusPanel.textContent = response.error || "刷新失败";
+    return;
   }
+
+  elements.statusPanel.hidden = false;
+  elements.statusPanel.textContent = response.error || "刷新失败";
 }
 
 async function init() {
   const response = await sendMessage({ type: "getState" });
-  if (response.ok) {
-    appState = response.state;
-    sources = response.sources;
-    render();
-    if (!appState.lastRefreshAt) {
-      refresh();
-    }
+  if (!response.ok) {
+    return;
+  }
+
+  appState = response.state;
+  sources = response.sources;
+  render();
+
+  if (!appState.lastRefreshAt) {
+    refresh();
   }
 }
 

@@ -19,11 +19,13 @@ function categoryLabel(categoryId) {
 function renderSources() {
   const enabled = new Set(appState.settings.enabledSourceIds);
   sourceList.innerHTML = "";
+
   sources.forEach((source) => {
     const item = document.createElement("label");
     item.className = "source-item";
 
     const body = document.createElement("div");
+
     const name = document.createElement("div");
     name.className = "source-name";
     name.textContent = source.name;
@@ -55,6 +57,7 @@ function renderSources() {
 function collectSettings() {
   const enabledSourceIds = [...sourceList.querySelectorAll("input[type='checkbox']:checked")]
     .map((input) => input.value);
+
   return {
     ...appState.settings,
     enabledSourceIds,
@@ -64,27 +67,31 @@ function collectSettings() {
 
 async function init() {
   const response = await sendMessage({ type: "getState" });
-  if (response.ok) {
-    appState = response.state;
-    sources = response.sources;
-    refreshSelect.value = String(appState.settings.refreshMinutes || 60);
-    renderSources();
+  if (!response.ok) {
+    return;
   }
+
+  appState = response.state;
+  sources = response.sources;
+  refreshSelect.value = String(appState.settings.refreshMinutes || 60);
+  renderSources();
 }
 
 saveButton.addEventListener("click", async () => {
   saveButton.disabled = true;
   const response = await sendMessage({ type: "saveSettings", settings: collectSettings() });
   saveButton.disabled = false;
+
   if (response.ok) {
     appState = response.state;
     saveMeta.textContent = "已保存";
     setTimeout(() => {
       saveMeta.textContent = "";
     }, 1600);
-  } else {
-    saveMeta.textContent = response.error || "保存失败";
+    return;
   }
+
+  saveMeta.textContent = response.error || "保存失败";
 });
 
 init();
