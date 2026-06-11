@@ -1,4 +1,4 @@
-﻿function isSafeLink(link) {
+function isSafeLink(link) {
   if (!link) return false;
   try {
     const { protocol } = new URL(link);
@@ -8,7 +8,7 @@
   }
 }
 
-function decodeHtml(value = "") {
+export function decodeHtml(value = "") {
   return value
     .replace(/<!\[CDATA\[(.*?)\]\]>/gs, "$1")
     .replace(/&amp;/g, "&")
