@@ -1,4 +1,6 @@
 import { SOURCE_TAGS } from "./sources.js";
+import { sendMessage, formatRelativeTime, formatDateTime, tagLabel, getDomain } from "./utils.js";
+import { sendMessage, formatRelativeTime, formatDateTime, tagLabel, getDomain } from "./utils.js";
 
 let appState = null;
 let sources = [];
@@ -24,41 +26,13 @@ const elements = {
   emptyState: document.querySelector("#emptyState")
 };
 
-function sendMessage(message) {
-  return chrome.runtime.sendMessage(message);
-}
 
-function formatRelativeTime(timestamp) {
-  if (!timestamp) {
-    return "尚未刷新";
-  }
-  const diff = Date.now() - timestamp;
-  const minutes = Math.max(1, Math.floor(diff / 60000));
-  if (minutes < 60) {
-    return `${minutes} 分钟前`;
-  }
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    return `${hours} 小时前`;
-  }
-  return new Date(timestamp).toLocaleDateString("zh-CN");
-}
 
-function formatDateTime(timestamp) {
-  if (!timestamp) {
-    return "";
-  }
-  return new Date(timestamp).toLocaleString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
 
-function tagLabel(tagId) {
-  return SOURCE_TAGS.find((tag) => tag.id === tagId)?.label || tagId || "综合";
-}
+
+
+
+
 
 function getSource(sourceId) {
   return sources.find((source) => source.id === sourceId);
@@ -66,16 +40,10 @@ function getSource(sourceId) {
 
 function getArticleTag(article) {
   const source = getSource(article.sourceId);
-  return article.tag || article.category || source?.tag || source?.category || "general";
+  return article.tag || source?.tag || "general";
 }
 
-function getDomain(link) {
-  try {
-    return new URL(link).hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
-}
+
 
 function getSourceFilters() {
   const enabled = new Set(appState.settings.enabledSourceIds || []);
@@ -83,8 +51,8 @@ function getSourceFilters() {
   return sources
     .filter((source) => enabled.has(source.id) || sourceIdsWithArticles.has(source.id))
     .sort((a, b) => {
-      const tagA = SOURCE_TAGS.findIndex((tag) => tag.id === (a.tag || a.category));
-      const tagB = SOURCE_TAGS.findIndex((tag) => tag.id === (b.tag || b.category));
+      const tagA = SOURCE_TAGS.findIndex((tag) => tag.id === (a.tag));
+      const tagB = SOURCE_TAGS.findIndex((tag) => tag.id === (b.tag));
       const rankA = Number(a.rank) || 999;
       const rankB = Number(b.rank) || 999;
       return tagA - tagB || rankA - rankB || a.name.localeCompare(b.name);
@@ -142,7 +110,7 @@ function renderSourceTabs() {
     button.className = `source-tab ${activeSourceId === source.id ? "active" : ""}`;
     button.type = "button";
     button.textContent = source.name;
-    button.title = `${source.name} · ${tagLabel(source.tag || source.category)}`;
+    button.title = `${source.name} · ${tagLabel(source.tag)}`;
     button.addEventListener("click", () => saveSettingsPatch({ activeSourceId: source.id }));
     elements.sourceTabs.append(button);
   });

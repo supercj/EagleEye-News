@@ -1,4 +1,6 @@
 import { SOURCE_TAGS, BUILTIN_SOURCES } from "./sources.js";
+import { sendMessage, tagLabel } from "./utils.js";
+import { sendMessage, tagLabel } from "./utils.js";
 import { parseSubscriptionInput } from "./subscription-import.js";
 
 let appState = null;
@@ -16,13 +18,9 @@ const importMeta = document.querySelector("#importMeta");
 const selectRecommended = document.querySelector("#selectRecommended");
 const hideReadInput = document.querySelector("#hideReadInput");
 
-function sendMessage(message) {
-  return chrome.runtime.sendMessage(message);
-}
 
-function tagLabel(tagId) {
-  return SOURCE_TAGS.find((tag) => tag.id === tagId)?.label || tagId || "综合";
-}
+
+
 
 function sourceIsBuiltIn(sourceId) {
   return BUILTIN_SOURCES.some((item) => item.id === sourceId);
@@ -89,7 +87,7 @@ function renderSources() {
   sourceList.innerHTML = "";
 
   SOURCE_TAGS.forEach((tag) => {
-    const groupedSources = sortSources(sources.filter((source) => (source.tag || source.category) === tag.id));
+    const groupedSources = sortSources(sources.filter((source) => (source.tag) === tag.id));
     if (!groupedSources.length) {
       return;
     }

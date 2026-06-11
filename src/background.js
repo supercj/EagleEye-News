@@ -53,7 +53,7 @@ async function fetchHackerNews(source) {
       summary: `${item.score || 0} points · ${item.descendants || 0} comments`,
       sourceId: source.id,
       sourceName: source.name,
-      tag: source.tag || source.category || "general",
+      tag: source.tag || "general",
       publishedAt: item.time ? item.time * 1000 : Date.now(),
       fetchedAt: Date.now()
     };
@@ -139,7 +139,7 @@ async function importCustomSources(importItems, defaultTag) {
       name: item.name || metadata.title || url,
       homepage: item.homepage || metadata.homepage || url,
       type,
-      tag: item.tag || item.category || defaultTag || "general"
+      tag: item.tag || defaultTag || "general"
     });
     existingByUrl.set(url, source);
     imported.push(source);
@@ -221,7 +221,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     }
 
     if (message.type === "importCustomSources") {
-      const state = await importCustomSources(message.items || [], message.defaultTag || message.defaultCategory || "general");
+      const state = await importCustomSources(message.items || [], message.defaultTag || "general");
       sendResponse({ ok: true, state, sources: getAllSources(state.customSources) });
       return;
     }
