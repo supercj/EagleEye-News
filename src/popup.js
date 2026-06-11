@@ -172,9 +172,39 @@ function renderStatus() {
   elements.statusPanel.textContent = failures.length ? failures.join("；") : "";
 }
 
-function renderArticles() {
+function renderArticles(fullRefresh = true) {
   const visibleArticles = getVisibleArticles();
-  elements.articleList.innerHTML = "";
+
+  if (!fullRefresh) {
+    for (const card of [...elements.articleList.children]) {
+      const articleId = card.dataset.articleId;
+      if (!articleId) continue;
+      const article = visibleArticles.find((item) => item.id === articleId);
+      if (!article) {
+        card.remove();
+        continue;
+      }
+      const isRead = Boolean(appState.readIds[article.id]);
+      const isBookmarked = Boolean(appState.bookmarks[article.id]);
+      const readState = card.querySelector(".read-state");
+      if (readState) {
+        readState.className = `read-state ${isRead ? "read" : ""}`;
+        readState.textContent = isRead ? "已读" : "未读";
+      }
+      const bookmarkButton = card.querySelector(".article-actions .text-button");
+      if (bookmarkButton) {
+        bookmarkButton.className = `text-button ${isBookmarked ? "active" : ""}`;
+        bookmarkButton.textContent = isBookmarked ? "已收藏" : "收藏";
+      }
+      if (appState.settings?.hideRead) {
+        card.style.display = isRead ? "none" : "";
+      }
+    }
+    elements.emptyState.hidden = elements.articleList.children.length > 0;
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
   elements.emptyState.hidden = visibleArticles.length > 0;
 
   visibleArticles.forEach((article) => {
@@ -216,7 +246,11 @@ function renderArticles() {
         return;
       }
       appState.readIds = response.readIds;
-      renderArticles();
+      if (appState.settings?.hideRead) {
+        renderArticles(true);
+      } else {
+        renderArticles(false);
+      }
     });
 
     const summary = document.createElement("p");
@@ -249,14 +283,15 @@ function renderArticles() {
         return;
       }
       appState.bookmarks = response.bookmarks;
-      renderArticles();
+      renderArticles(false);
     });
 
     actions.append(readState, bookmarkButton);
     meta.append(detail, actions);
     card.append(sourceRow, title, summary, meta);
-    elements.articleList.append(card);
+    fragment.append(card);
   });
+  elements.articleList.replaceChildren(fragment);
 }
 
 function render() {
