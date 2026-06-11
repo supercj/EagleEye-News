@@ -1,6 +1,5 @@
 import { SOURCE_TAGS, BUILTIN_SOURCES } from "./sources.js";
 import { sendMessage, tagLabel } from "./utils.js";
-import { sendMessage, tagLabel } from "./utils.js";
 import { parseSubscriptionInput } from "./subscription-import.js";
 
 let appState = null;
