@@ -63,7 +63,11 @@
     "https://www.cnbc.com/*",
     "https://www.nasdaq.com/*",
     "https://feeds.content.dowjones.io/*",
-    "https://seekingalpha.com/*"
+    "https://seekingalpha.com/*",
+    "https://rsshub.app/*",
+    "https://bbs.hupu.com/*",
+    "https://www.52pojie.cn/*",
+    "https://www.bilibili.com/*"
   ],
     "commands": {
     "_execute_action": {

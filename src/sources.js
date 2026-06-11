@@ -2,6 +2,36 @@ export const DEFAULT_REFRESH_MINUTES = 60;
 
 export const BUILTIN_SOURCES = [
   {
+    id: "bilibili-hot",
+    name: "B站热榜",
+    tag: "china",
+    rank: 8,
+    type: "rss",
+    url: "https://rsshub.app/bilibili/ranking/0/1/3",
+    homepage: "https://www.bilibili.com/ranking",
+    limit: 20
+  },
+  {
+    id: "52pojie",
+    name: "吾爱破解",
+    tag: "dev",
+    rank: 9,
+    type: "rss",
+    url: "https://rsshub.app/52pojie/forum/65",
+    homepage: "https://www.52pojie.cn/forum-65-1.html",
+    limit: 20
+  },
+  {
+    id: "hupu-hot",
+    name: "虎扑热帖",
+    tag: "china",
+    rank: 9,
+    type: "rss",
+    url: "https://rsshub.app/hupu/bbs/1",
+    homepage: "https://bbs.hupu.com/all-gambia",
+    limit: 20
+  },
+  {
     id: "abc-news",
     name: "ABC News",
     tag: "general",
@@ -250,8 +280,7 @@ export const BUILTIN_SOURCES = [
     url: "https://seekingalpha.com/feed.xml",
     homepage: "https://seekingalpha.com/",
     limit: 20
-  },
-  {
+  },{
     id: "v2ex-hot",
     name: "V2EX 热门",
     tag: "dev",
@@ -271,7 +300,7 @@ export const BUILTIN_SOURCES = [
     homepage: "https://linux.do/latest",
     limit: 20
   },
-  {
+
     id: "github-trending",
     name: "GitHub Trending",
     tag: "dev",
