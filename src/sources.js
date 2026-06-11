@@ -301,6 +301,7 @@ export const BUILTIN_SOURCES = [
     limit: 20
   },
 
+  {
     id: "github-trending",
     name: "GitHub Trending",
     tag: "dev",
@@ -391,7 +392,17 @@ export const BUILTIN_SOURCES = [
   }
 ];
 
-export const DEFAULT_ENABLED_SOURCE_IDS = [];
+export const DEFAULT_ENABLED_SOURCE_IDS = [
+  "bilibili-hot", "52pojie", "hupu-hot",
+  "abc-news", "cbs-news", "sky-news", "npr-news",
+  "36kr", "sina-news", "people-politics", "tmtpost", "leiphone", "oschina-news", "cnblogs-news",
+  "ifanr", "ithome", "sspai", "infoq-cn", "solidot",
+  "the-verge", "techcrunch", "ars-technica", "wired", "zdnet",
+  "cnbc-finance", "nasdaq-markets", "marketwatch", "seeking-alpha",
+  "v2ex-hot", "linux-do-latest",
+  "github-trending", "hackernews", "github-blog", "stackoverflow-blog", "juejin", "hellogithub",
+  "producthunt", "readhub", "qbitai"
+];
 
 export const SOURCE_TAGS = [
   { id: "general", label: "综合" },
