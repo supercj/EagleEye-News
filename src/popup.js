@@ -1,7 +1,5 @@
 import { SOURCE_TAGS } from "./sources.js";
 import { sendMessage, formatRelativeTime, formatDateTime, tagLabel, getDomain } from "./utils.js";
-import { sendMessage, formatRelativeTime, formatDateTime, tagLabel, getDomain } from "./utils.js";
-
 let appState = null;
 let sources = [];
 let searchOpen = false;
