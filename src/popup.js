@@ -144,6 +144,19 @@ function renderSourceTabs() {
     button.addEventListener("click", () => saveSettingsPatch({ activeSourceId: source.id }));
     elements.sourceTabs.append(button);
   });
+
+  centerActiveSourceTab();
+}
+
+function centerActiveSourceTab() {
+  requestAnimationFrame(() => {
+    const activeTab = elements.sourceTabs.querySelector(".source-tab.active");
+    activeTab?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center"
+    });
+  });
 }
 
 function renderStatus() {
@@ -291,11 +304,36 @@ elements.searchButton.addEventListener("click", () => {
     elements.keywordInput.focus();
   }
 });
+document.addEventListener("click", (event) => {
+  if (!searchOpen) {
+    return;
+  }
+  if (elements.searchOverlay.contains(event.target) || elements.searchButton.contains(event.target)) {
+    return;
+  }
+  searchOpen = false;
+  render();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape" || !searchOpen) {
+    return;
+  }
+  searchOpen = false;
+  render();
+  elements.searchButton.focus();
+});
 elements.optionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 elements.openOptionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 elements.openImportButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 elements.latestViewButton.addEventListener("click", () => saveSettingsPatch({ viewMode: "latest" }));
 elements.bookmarksViewButton.addEventListener("click", () => saveSettingsPatch({ viewMode: "bookmarks" }));
+elements.sourceTabs.addEventListener("wheel", (event) => {
+  if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) {
+    return;
+  }
+  event.preventDefault();
+  elements.sourceTabs.scrollLeft += event.deltaY;
+}, { passive: false });
 elements.keywordInput.addEventListener("input", (event) => {
   saveSettingsPatch({ keyword: event.target.value });
 });

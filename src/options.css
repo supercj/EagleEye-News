@@ -155,6 +155,92 @@ button {
   color: var(--text);
 }
 
+.repo-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 0 12px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.repo-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.about-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 14px;
+}
+
+.project-info {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.project-info strong {
+  font-size: 16px;
+}
+
+.project-info p {
+  line-height: 1.5;
+}
+
+.project-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.project-links a {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  padding: 5px 10px;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.project-links a:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.donation-panel {
+  display: flex;
+  gap: 12px;
+}
+
+.donation-card {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.donation-qr {
+  display: grid;
+  place-items: center;
+  width: 92px;
+  aspect-ratio: 1;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  background: #fbfcfd;
+  color: var(--muted);
+}
+
 .source-list {
   display: grid;
   gap: 12px;
@@ -252,5 +338,13 @@ button {
 @media (max-width: 720px) {
   .source-group-list {
     grid-template-columns: 1fr;
+  }
+
+  .about-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .donation-panel {
+    justify-content: flex-start;
   }
 }
