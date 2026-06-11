@@ -207,19 +207,8 @@ function renderArticles(fullRefresh = true) {
     title.target = "_blank";
     title.rel = "noreferrer";
     title.textContent = article.title;
-    title.addEventListener("click", async (event) => {
-      event.preventDefault();
-      const response = await sendMessage({ type: "openArticle", article: { id: article.id, link: article.link } });
-      if (!response.ok) {
-        return;
-      }
-      appState.readIds = response.readIds;
-      if (appState.settings?.hideRead) {
-        renderArticles(true);
-      } else {
-        renderArticles(false);
-      }
-    });
+    title.dataset.action = "open";
+    title.dataset.article = JSON.stringify({ id: article.id, link: article.link });
 
     const summary = document.createElement("p");
     summary.className = "article-summary";
@@ -245,14 +234,8 @@ function renderArticles(fullRefresh = true) {
     const bookmarkButton = document.createElement("button");
     bookmarkButton.className = `text-button ${isBookmarked ? "active" : ""}`;
     bookmarkButton.textContent = isBookmarked ? "已收藏" : "收藏";
-    bookmarkButton.addEventListener("click", async () => {
-      const response = await sendMessage({ type: "toggleBookmark", id: article.id });
-      if (!response.ok) {
-        return;
-      }
-      appState.bookmarks = response.bookmarks;
-      renderArticles(false);
-    });
+    bookmarkButton.dataset.action = "bookmark";
+    bookmarkButton.dataset.articleId = article.id;
 
     actions.append(readState, bookmarkButton);
     meta.append(detail, actions);
@@ -326,6 +309,33 @@ document.addEventListener("keydown", (event) => {
   searchOpen = false;
   render();
   elements.searchButton.focus();
+});
+elements.articleList.addEventListener("click", async (event) => {
+  const target = event.target;
+  if (target.closest("[data-action='open']")) {
+    event.preventDefault();
+    const dataset = target.closest("[data-article]")?.dataset;
+    if (!dataset?.article) return;
+    const parsed = JSON.parse(dataset.article);
+    const response = await sendMessage({ type: "openArticle", article: parsed });
+    if (!response.ok) return;
+    appState.readIds = response.readIds;
+    if (appState.settings?.hideRead) {
+      renderArticles(true);
+    } else {
+      renderArticles(false);
+    }
+    return;
+  }
+  const bookmarkBtn = target.closest("[data-action='bookmark']");
+  if (bookmarkBtn) {
+    const articleId = bookmarkBtn.dataset.articleId;
+    if (!articleId) return;
+    const response = await sendMessage({ type: "toggleBookmark", id: articleId });
+    if (!response.ok) return;
+    appState.bookmarks = response.bookmarks;
+    renderArticles(false);
+  }
 });
 elements.optionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 elements.openOptionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
