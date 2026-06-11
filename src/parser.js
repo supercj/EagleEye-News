@@ -1,4 +1,4 @@
-function isSafeLink(link) {
+﻿function isSafeLink(link) {
   if (!link) return false;
   try {
     const { protocol } = new URL(link);
@@ -45,7 +45,7 @@ export function makeArticleId(sourceId, link, title) {
   return `${sourceId}:${link || title}`.toLowerCase().replace(/\s+/g, "-");
 }
 
-export function parseRss(xmlText, source) {
+function parseRssWithRegex(xmlText, source) {
   const chunks = xmlText.match(/<item[\s\S]*?<\/item>|<entry[\s\S]*?<\/entry>/g) || [];
   return chunks.slice(0, source.limit || 20).map((chunk) => {
     const title = firstMatch(chunk, [/<title[^>]*>([\s\S]*?)<\/title>/i]);
@@ -79,6 +79,37 @@ export function parseRss(xmlText, source) {
   }).filter((item) => item.title && isSafeLink(item.link));
 }
 
+
+export function parseRss(xmlText, source) {
+  try {
+    const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+    if (!doc || doc.querySelector("parsererror")) {
+      return parseRssWithRegex(xmlText, source);
+    }
+    const nodes = [...doc.querySelectorAll("item, entry")].slice(0, source.limit || 20);
+    return nodes.map((node) => {
+      const title = decodeHtml(node.querySelector("title")?.textContent ?? "");
+      const linkNode = node.querySelector("link[href]") ?? node.querySelector("link");
+      const link = (linkNode?.getAttribute?.("href") || linkNode?.textContent || "").trim();
+      const published = node.querySelector("pubDate, published, updated")?.textContent ?? "";
+      const summary = stripTags(node.querySelector("description, summary, content")?.textContent ?? "").slice(0, 260);
+
+      return {
+        id: makeArticleId(source.id, link, title),
+        title,
+        link,
+        summary,
+        sourceId: source.id,
+        sourceName: source.name,
+        tag: source.tag || source.category || "general",
+        publishedAt: normalizeDate(published),
+        fetchedAt: Date.now()
+      };
+    }).filter((item) => item.title && isSafeLink(item.link));
+  } catch {
+    return parseRssWithRegex(xmlText, source);
+  }
+}
 export function parseGithubTrending(htmlText, source) {
   const repoBlocks = htmlText.match(/<article[\s\S]*?<\/article>/g) || [];
   return repoBlocks.slice(0, source.limit || 20).map((block) => {
@@ -168,3 +199,4 @@ export function dedupeArticles(articles) {
     return true;
   }).sort((a, b) => b.publishedAt - a.publishedAt);
 }
+
