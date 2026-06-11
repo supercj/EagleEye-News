@@ -19,6 +19,10 @@
     --accent: #34d399;
     --accent-soft: #064e3b;
   }
+
+  .save-meta.error {
+    color: #f87171;
+  }
 }
 
 * {
@@ -344,8 +348,19 @@ button {
 .footer {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
   padding-top: 10px;
+}
+
+.save-meta {
+  font-size: 13px;
+  color: var(--muted);
+  transition: opacity 0.3s;
+}
+
+.save-meta.error {
+  color: #ef4444;
 }
 
 @media (max-width: 720px) {

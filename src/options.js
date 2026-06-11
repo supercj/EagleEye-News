@@ -7,7 +7,6 @@ let sources = [];
 
 const sourceList = document.querySelector("#sourceList");
 const refreshSelect = document.querySelector("#refreshSelect");
-const saveButton = document.querySelector("#saveButton");
 const saveMeta = document.querySelector("#saveMeta");
 const importInput = document.querySelector("#importInput");
 const importTag = document.querySelector("#importTag");
@@ -83,6 +82,14 @@ function updateGroupActionButton(group, button) {
 
 function renderSources() {
   const enabled = new Set(appState.settings.enabledSourceIds || []);
+
+  // 保存当前展开状态
+  const openTags = new Set();
+  sourceList.querySelectorAll("details.source-group[open]").forEach((el) => {
+    const tag = el.querySelector(".source-group-title span")?.textContent?.split(" · ")[0];
+    if (tag) openTags.add(tag);
+  });
+
   sourceList.innerHTML = "";
 
   SOURCE_TAGS.forEach((tag) => {
@@ -93,7 +100,7 @@ function renderSources() {
 
     const group = document.createElement("details");
     group.className = "source-group";
-    group.open = false;
+    group.open = openTags.has(tag.label);
 
     const summary = document.createElement("summary");
     summary.className = "source-group-title";
@@ -124,6 +131,7 @@ function renderSources() {
         checkbox.checked = shouldCheck;
       });
       updateGroupActionButton(groupList, actionButton);
+      scheduleAutoSave();
     });
 
     summary.append(title, actionButton);
@@ -154,7 +162,6 @@ async function applySettings(settings) {
   }
   appState = response.state;
   sources = response.sources;
-  renderSources();
 }
 
 async function init() {
@@ -169,6 +176,35 @@ async function init() {
   renderSources();
 }
 
+let autoSaveTimer = null;
+let isSaving = false;
+
+function showSaveStatus(text, isError = false) {
+  saveMeta.textContent = text;
+  saveMeta.classList.toggle("error", isError);
+}
+
+function scheduleAutoSave() {
+  clearTimeout(autoSaveTimer);
+  showSaveStatus("");
+  autoSaveTimer = setTimeout(async () => {
+    if (isSaving) return;
+    isSaving = true;
+    showSaveStatus("保存中…");
+    try {
+      await applySettings(collectSettings());
+      showSaveStatus("已自动保存");
+      setTimeout(() => {
+        if (saveMeta.textContent === "已自动保存") showSaveStatus("");
+      }, 1600);
+    } catch (error) {
+      showSaveStatus(error.message || "保存失败", true);
+    } finally {
+      isSaving = false;
+    }
+  }, 500);
+}
+
 selectRecommended.addEventListener("click", () => {
   const recommended = new Set(BUILTIN_SOURCES.map((source) => source.id));
   sourceList.querySelectorAll("input[type='checkbox']").forEach((input) => {
@@ -177,24 +213,10 @@ selectRecommended.addEventListener("click", () => {
   sourceList.querySelectorAll(".source-group").forEach((group) => {
     const button = group.querySelector(".source-group-action");
     if (button) {
-      updateGroupActionButton(group, button);
+      updateGroupActionButton(group.querySelector(".source-group-list"), button);
     }
   });
-});
-
-saveButton.addEventListener("click", async () => {
-  saveButton.disabled = true;
-  try {
-    await applySettings(collectSettings());
-    saveMeta.textContent = "已保存";
-    setTimeout(() => {
-      saveMeta.textContent = "";
-    }, 1600);
-  } catch (error) {
-    saveMeta.textContent = error.message;
-  } finally {
-    saveButton.disabled = false;
-  }
+  scheduleAutoSave();
 });
 
 async function ensurePermissionForItems(items) {
@@ -250,6 +272,14 @@ importFile.addEventListener("change", async () => {
   const text = await file.text();
   importInput.value = text;
   importMeta.textContent = `已载入 ${file.name}`;
+});
+
+refreshSelect.addEventListener("change", scheduleAutoSave);
+hideReadInput.addEventListener("change", scheduleAutoSave);
+sourceList.addEventListener("change", (event) => {
+  if (event.target.matches("input[type='checkbox']")) {
+    scheduleAutoSave();
+  }
 });
 
 init();
