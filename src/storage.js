@@ -22,6 +22,18 @@ export async function getStoredState() {
   };
 
   const state = await chrome.storage.local.get(defaults);
+  const EXPIRE_MS = 90 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  if (state[STORAGE_KEYS.readIds] && typeof state[STORAGE_KEYS.readIds] === "object") {
+    const cleaned = {};
+    for (const [key, value] of Object.entries(state[STORAGE_KEYS.readIds])) {
+      if (typeof value === "number" && now - value < EXPIRE_MS) {
+        cleaned[key] = value;
+      }
+    }
+    state[STORAGE_KEYS.readIds] = cleaned;
+  }
+
   const settings = { ...getDefaultSettings(), ...state[STORAGE_KEYS.settings] };
   settings.enabledSourceIds = (settings.enabledSourceIds || []).map((sourceId) => (
     sourceId === "kr36-flash" ? "cnbc-finance" : sourceId
