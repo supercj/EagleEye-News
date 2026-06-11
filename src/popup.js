@@ -4,6 +4,8 @@ let appState = null;
 let sources = [];
 let searchOpen = false;
 
+let keywordTimer = null;
+
 const elements = {
   refreshMeta: document.querySelector("#refreshMeta"),
   searchButton: document.querySelector("#searchButton"),
@@ -335,7 +337,8 @@ elements.sourceTabs.addEventListener("wheel", (event) => {
   elements.sourceTabs.scrollLeft += event.deltaY;
 }, { passive: false });
 elements.keywordInput.addEventListener("input", (event) => {
-  saveSettingsPatch({ keyword: event.target.value });
+  clearTimeout(keywordTimer);
+  keywordTimer = setTimeout(() => saveSettingsPatch({ keyword: event.target.value }), 300);
 });
 
 init();

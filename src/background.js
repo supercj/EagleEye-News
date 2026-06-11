@@ -2,8 +2,21 @@ import { getAllSources, getDefaultSettings, normalizeCustomSource, stableSourceI
 import { STORAGE_KEYS, getStoredState, markRead, saveArticles, saveCustomSources, saveSettings, toggleMapItem } from "./storage.js";
 import { dedupeArticles, makeArticleId, parseFeedMetadata, parseGithubTrending, parseJsonFeed, parseRss } from "./parser.js";
 
+const FETCH_TIMEOUT_MS = 12_000;
+
+async function fetchWithTimeout(url, init = {}, timeoutMs = FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function fetchText(url) {
-  const response = await fetch(url, {
+  const response = await fetchWithTimeout(url, {
     headers: {
       Accept: "application/rss+xml, application/atom+xml, text/xml, text/html, application/json;q=0.9, */*;q=0.8"
     }
@@ -15,14 +28,18 @@ async function fetchText(url) {
 }
 
 async function fetchHackerNews(source) {
-  const topResponse = await fetch("https://hacker-news.firebaseio.com/v0/topstories.json");
+  const topResponse = await fetchWithTimeout("https://hacker-news.firebaseio.com/v0/topstories.json");
   if (!topResponse.ok) {
     throw new Error(`HTTP ${topResponse.status}`);
   }
 
   const storyIds = (await topResponse.json()).slice(0, source.limit || 20);
   const stories = await Promise.all(storyIds.map(async (storyId) => {
-    const itemResponse = await fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`);
+    const itemResponse = await fetchWithTimeout(
+      `https://hacker-news.firebaseio.com/v0/item/${storyId}.json`,
+      {},
+      8_000
+    );
     if (!itemResponse.ok) {
       return null;
     }

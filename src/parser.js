@@ -1,3 +1,13 @@
+function isSafeLink(link) {
+  if (!link) return false;
+  try {
+    const { protocol } = new URL(link);
+    return protocol === "http:" || protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function decodeHtml(value = "") {
   return value
     .replace(/<!\[CDATA\[(.*?)\]\]>/gs, "$1")
@@ -7,6 +17,8 @@ function decodeHtml(value = "") {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&#x2F;/g, "/")
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(Number(dec)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
     .trim();
 }
 
@@ -64,7 +76,7 @@ export function parseRss(xmlText, source) {
       publishedAt: normalizeDate(published),
       fetchedAt: Date.now()
     };
-  }).filter((item) => item.title && item.link);
+  }).filter((item) => item.title && isSafeLink(item.link));
 }
 
 export function parseGithubTrending(htmlText, source) {
@@ -85,7 +97,7 @@ export function parseGithubTrending(htmlText, source) {
       publishedAt: Date.now(),
       fetchedAt: Date.now()
     };
-  }).filter((item) => item.title && item.link);
+  }).filter((item) => item.title && isSafeLink(item.link));
 }
 
 export function parseJsonFeed(jsonText, source) {
@@ -108,7 +120,7 @@ export function parseJsonFeed(jsonText, source) {
       publishedAt: normalizeDate(item.date_published || item.date_modified || item.published_at),
       fetchedAt: Date.now()
     };
-  }).filter((item) => item.title && item.link);
+  }).filter((item) => item.title && isSafeLink(item.link));
 }
 
 export function parseFeedMetadata(text) {
