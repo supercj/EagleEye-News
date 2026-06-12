@@ -14,6 +14,14 @@
       </header>
 
       <section class="section">
+        <div class="section-head">
+          <h2>推荐来源</h2>
+          <button id="selectRecommended" class="secondary-button">启用推荐源</button>
+        </div>
+        <div id="sourceList" class="source-list"></div>
+      </section>
+
+      <section class="section">
         <h2>导入订阅</h2>
         <div class="import-panel">
           <textarea id="importInput" placeholder="粘贴 OPML、RSS/Atom/JSON Feed 地址，或每行一个订阅链接"></textarea>
@@ -37,14 +45,6 @@
           </div>
           <p id="importMeta" class="meta"></p>
         </div>
-      </section>
-
-      <section class="section">
-        <div class="section-head">
-          <h2>推荐来源</h2>
-          <button id="selectRecommended" class="secondary-button">启用推荐源</button>
-        </div>
-        <div id="sourceList" class="source-list"></div>
       </section>
 
       <section class="section">
@@ -96,8 +96,7 @@
       </section>
 
       <footer class="footer">
-        <button id="saveButton">保存设置</button>
-        <span id="saveMeta"></span>
+        <span id="saveMeta" class="save-meta"></span>
       </footer>
     </main>
     <script type="module" src="./options.js"></script>

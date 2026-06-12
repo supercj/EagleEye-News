@@ -1,4 +1,4 @@
-# EagleEye News 隐私说明
+﻿# EagleEye News 隐私说明
 
 EagleEye News 是一个本地运行的 Chrome/Edge 资讯聚合扩展。扩展不提供账号系统，不采集、上传或出售任何个人信息。
 

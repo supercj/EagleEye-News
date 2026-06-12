@@ -1,8 +1,10 @@
 import { SOURCE_TAGS } from "./sources.js";
-
+import { sendMessage, formatRelativeTime, formatDateTime, tagLabel, getDomain } from "./utils.js";
 let appState = null;
 let sources = [];
 let searchOpen = false;
+
+let keywordTimer = null;
 
 const elements = {
   refreshMeta: document.querySelector("#refreshMeta"),
@@ -22,41 +24,13 @@ const elements = {
   emptyState: document.querySelector("#emptyState")
 };
 
-function sendMessage(message) {
-  return chrome.runtime.sendMessage(message);
-}
 
-function formatRelativeTime(timestamp) {
-  if (!timestamp) {
-    return "尚未刷新";
-  }
-  const diff = Date.now() - timestamp;
-  const minutes = Math.max(1, Math.floor(diff / 60000));
-  if (minutes < 60) {
-    return `${minutes} 分钟前`;
-  }
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) {
-    return `${hours} 小时前`;
-  }
-  return new Date(timestamp).toLocaleDateString("zh-CN");
-}
 
-function formatDateTime(timestamp) {
-  if (!timestamp) {
-    return "";
-  }
-  return new Date(timestamp).toLocaleString("zh-CN", {
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
-  });
-}
 
-function tagLabel(tagId) {
-  return SOURCE_TAGS.find((tag) => tag.id === tagId)?.label || tagId || "综合";
-}
+
+
+
+
 
 function getSource(sourceId) {
   return sources.find((source) => source.id === sourceId);
@@ -64,16 +38,10 @@ function getSource(sourceId) {
 
 function getArticleTag(article) {
   const source = getSource(article.sourceId);
-  return article.tag || article.category || source?.tag || source?.category || "general";
+  return article.tag || source?.tag || "general";
 }
 
-function getDomain(link) {
-  try {
-    return new URL(link).hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
-}
+
 
 function getSourceFilters() {
   const enabled = new Set(appState.settings.enabledSourceIds || []);
@@ -81,8 +49,8 @@ function getSourceFilters() {
   return sources
     .filter((source) => enabled.has(source.id) || sourceIdsWithArticles.has(source.id))
     .sort((a, b) => {
-      const tagA = SOURCE_TAGS.findIndex((tag) => tag.id === (a.tag || a.category));
-      const tagB = SOURCE_TAGS.findIndex((tag) => tag.id === (b.tag || b.category));
+      const tagA = SOURCE_TAGS.findIndex((tag) => tag.id === (a.tag));
+      const tagB = SOURCE_TAGS.findIndex((tag) => tag.id === (b.tag));
       const rankA = Number(a.rank) || 999;
       const rankB = Number(b.rank) || 999;
       return tagA - tagB || rankA - rankB || a.name.localeCompare(b.name);
@@ -140,7 +108,7 @@ function renderSourceTabs() {
     button.className = `source-tab ${activeSourceId === source.id ? "active" : ""}`;
     button.type = "button";
     button.textContent = source.name;
-    button.title = `${source.name} · ${tagLabel(source.tag || source.category)}`;
+    button.title = `${source.name} · ${tagLabel(source.tag)}`;
     button.addEventListener("click", () => saveSettingsPatch({ activeSourceId: source.id }));
     elements.sourceTabs.append(button);
   });
@@ -170,9 +138,39 @@ function renderStatus() {
   elements.statusPanel.textContent = failures.length ? failures.join("；") : "";
 }
 
-function renderArticles() {
+function renderArticles(fullRefresh = true) {
   const visibleArticles = getVisibleArticles();
-  elements.articleList.innerHTML = "";
+
+  if (!fullRefresh) {
+    for (const card of [...elements.articleList.children]) {
+      const articleId = card.dataset.articleId;
+      if (!articleId) continue;
+      const article = visibleArticles.find((item) => item.id === articleId);
+      if (!article) {
+        card.remove();
+        continue;
+      }
+      const isRead = Boolean(appState.readIds[article.id]);
+      const isBookmarked = Boolean(appState.bookmarks[article.id]);
+      const readState = card.querySelector(".read-state");
+      if (readState) {
+        readState.className = `read-state ${isRead ? "read" : ""}`;
+        readState.textContent = isRead ? "已读" : "未读";
+      }
+      const bookmarkButton = card.querySelector(".article-actions .text-button");
+      if (bookmarkButton) {
+        bookmarkButton.className = `text-button ${isBookmarked ? "active" : ""}`;
+        bookmarkButton.textContent = isBookmarked ? "已收藏" : "收藏";
+      }
+      if (appState.settings?.hideRead) {
+        card.style.display = isRead ? "none" : "";
+      }
+    }
+    elements.emptyState.hidden = elements.articleList.children.length > 0;
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
   elements.emptyState.hidden = visibleArticles.length > 0;
 
   visibleArticles.forEach((article) => {
@@ -207,15 +205,8 @@ function renderArticles() {
     title.target = "_blank";
     title.rel = "noreferrer";
     title.textContent = article.title;
-    title.addEventListener("click", async (event) => {
-      event.preventDefault();
-      const response = await sendMessage({ type: "openArticle", article: { id: article.id, link: article.link } });
-      if (!response.ok) {
-        return;
-      }
-      appState.readIds = response.readIds;
-      renderArticles();
-    });
+    title.dataset.action = "open";
+    title.dataset.article = JSON.stringify({ id: article.id, link: article.link });
 
     const summary = document.createElement("p");
     summary.className = "article-summary";
@@ -241,20 +232,15 @@ function renderArticles() {
     const bookmarkButton = document.createElement("button");
     bookmarkButton.className = `text-button ${isBookmarked ? "active" : ""}`;
     bookmarkButton.textContent = isBookmarked ? "已收藏" : "收藏";
-    bookmarkButton.addEventListener("click", async () => {
-      const response = await sendMessage({ type: "toggleBookmark", id: article.id });
-      if (!response.ok) {
-        return;
-      }
-      appState.bookmarks = response.bookmarks;
-      renderArticles();
-    });
+    bookmarkButton.dataset.action = "bookmark";
+    bookmarkButton.dataset.articleId = article.id;
 
     actions.append(readState, bookmarkButton);
     meta.append(detail, actions);
     card.append(sourceRow, title, summary, meta);
-    elements.articleList.append(card);
+    fragment.append(card);
   });
+  elements.articleList.replaceChildren(fragment);
 }
 
 function render() {
@@ -322,6 +308,33 @@ document.addEventListener("keydown", (event) => {
   render();
   elements.searchButton.focus();
 });
+elements.articleList.addEventListener("click", async (event) => {
+  const target = event.target;
+  if (target.closest("[data-action='open']")) {
+    event.preventDefault();
+    const dataset = target.closest("[data-article]")?.dataset;
+    if (!dataset?.article) return;
+    const parsed = JSON.parse(dataset.article);
+    const response = await sendMessage({ type: "openArticle", article: parsed });
+    if (!response.ok) return;
+    appState.readIds = response.readIds;
+    if (appState.settings?.hideRead) {
+      renderArticles(true);
+    } else {
+      renderArticles(false);
+    }
+    return;
+  }
+  const bookmarkBtn = target.closest("[data-action='bookmark']");
+  if (bookmarkBtn) {
+    const articleId = bookmarkBtn.dataset.articleId;
+    if (!articleId) return;
+    const response = await sendMessage({ type: "toggleBookmark", id: articleId });
+    if (!response.ok) return;
+    appState.bookmarks = response.bookmarks;
+    renderArticles(false);
+  }
+});
 elements.optionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 elements.openOptionsButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
 elements.openImportButton.addEventListener("click", () => chrome.runtime.openOptionsPage());
@@ -335,7 +348,8 @@ elements.sourceTabs.addEventListener("wheel", (event) => {
   elements.sourceTabs.scrollLeft += event.deltaY;
 }, { passive: false });
 elements.keywordInput.addEventListener("input", (event) => {
-  saveSettingsPatch({ keyword: event.target.value });
+  clearTimeout(keywordTimer);
+  keywordTimer = setTimeout(() => saveSettingsPatch({ keyword: event.target.value }), 300);
 });
 
 init();

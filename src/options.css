@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light dark;
   --bg: #f7f8fa;
   --panel: #ffffff;
   --text: #1f2933;
@@ -6,6 +7,22 @@
   --border: #d9e2ec;
   --accent: #0f766e;
   --accent-soft: #d9f5f0;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111827;
+    --panel: #1f2937;
+    --text: #f3f4f6;
+    --muted: #9ca3af;
+    --border: #374151;
+    --accent: #34d399;
+    --accent-soft: #064e3b;
+  }
+
+  .save-meta.error {
+    color: #f87171;
+  }
 }
 
 * {
@@ -331,8 +348,19 @@ button {
 .footer {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
   padding-top: 10px;
+}
+
+.save-meta {
+  font-size: 13px;
+  color: var(--muted);
+  transition: opacity 0.3s;
+}
+
+.save-meta.error {
+  color: #ef4444;
 }
 
 @media (max-width: 720px) {
